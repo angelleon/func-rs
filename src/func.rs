@@ -1,6 +1,7 @@
 #![crate_name = "doc"]
 
 pub enum FuncType {
+    Abstract,
     Const,
     Idem,
     Sum,
@@ -18,7 +19,7 @@ pub enum FuncType {
     TrigAtan,
     Sqrt,
     Qbrt,
-    Nroot,
+    Nthrt,
 }
 
 /// Represents a function f that can be evaluated at x value
@@ -31,8 +32,14 @@ pub struct Func {
     f_type: FuncType,
 }
 
+impl Func {
+    pub fn new() -> Self {
+        Self {f_type: FuncType::Abstract}
+    }
+}
+
 impl FuncEval for Func {
-    fn eval(&self, x: f64) -> f64 {
+    fn eval(&self, _: f64) -> f64 {
         0f64
     }
 }
@@ -62,7 +69,7 @@ pub struct FuncIdem {
 }
 
 impl FuncIdem {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             f_type: FuncType::Idem,
         }
@@ -210,7 +217,7 @@ where
     T: FuncEval,
 {
     fn eval(&self, x: f64) -> f64 {
-        f64::consts::E.powf(x)
+        std::f64::consts::E.powf(x)
     }
 }
 
@@ -224,13 +231,19 @@ where
     f: T,
 }
 
-impl<T> FuncLogA<T> {
+impl<T> FuncLogA<T>
+where
+    T: FuncEval,
+{
     pub fn new(b: f64, f: T) -> Self {
         Self { b, f }
     }
 }
 
-impl<T> FuncEval for FuncLogA<T> {
+impl<T> FuncEval for FuncLogA<T>
+where
+    T: FuncEval,
+{
     fn eval(&self, x: f64) -> f64 {
         self.f.eval(x).log(self.b)
     }
@@ -238,17 +251,26 @@ impl<T> FuncEval for FuncLogA<T> {
 
 /// Represents neperian logarithm (natural log, log base e where e is Eulers constant) ln of function f
 /// Given x a positive real number ln(x) = log_e(f(x))
-pub struct FuncLogE<T> {
+pub struct FuncLogE<T>
+where
+    T: FuncEval,
+{
     f: T,
 }
 
-impl<T> FuncLogE<T> {
+impl<T> FuncLogE<T>
+where
+    T: FuncEval,
+{
     pub fn new(f: T) -> Self {
         Self { f }
     }
 }
 
-impl<T> FuncEval for FuncLogE<T> {
+impl<T> FuncEval for FuncLogE<T>
+where
+    T: FuncEval,
+{
     fn eval(&self, x: f64) -> f64 {
         self.f.eval(x).ln()
     }
@@ -317,7 +339,10 @@ where
     f: T,
 }
 
-impl<T> FuncTan<T> {
+impl<T> FuncTan<T>
+where
+    T: FuncEval,
+{
     pub fn new(f: T) -> Self {
         Self { f }
     }
@@ -328,7 +353,7 @@ where
     T: FuncEval,
 {
     fn eval(&self, x: f64) -> f64 {
-        sefl.f.eval(x).tan()
+        self.f.eval(x).tan()
     }
 }
 
@@ -360,7 +385,7 @@ where
 }
 
 /// Represents a function arc cosine for a function f
-/// Given x a real number (-1 <= x <= 1) Acos(x) = acos(f(x))
+/// Given x a real number (-1 <= x <= 1) then Acos(x) = acos(f(x))
 pub struct FuncAcos<T>
 where
     T: FuncEval,
@@ -374,5 +399,112 @@ where
 {
     pub fn new(f: T) -> Self {
         Self { f }
+    }
+}
+
+/// Represents a arc tan function of a f function
+/// Given x a real number then Atan(x) = atan(f(x))
+pub struct FuncAtan<T>
+where
+    T: FuncEval,
+{
+    f: T,
+}
+
+impl<T> FuncAtan<T>
+where
+    T: FuncEval,
+{
+    pub fn new(f: T) -> Self {
+        Self { f }
+    }
+}
+
+impl<T> FuncEval for FuncAtan<T>
+where
+    T: FuncEval,
+{
+    fn eval(&self, x: f64) -> f64 {
+        self.f.eval(x).atan()
+    }
+}
+
+/// Represents a square root function of a f function
+/// Given x a real number then Sqrt(x) = sqrt(f(x))
+pub struct FuncSqrt<T> {
+    f: T,
+}
+
+impl<T> FuncSqrt<T>
+where
+    T: FuncEval,
+{
+    pub fn new(f: T) -> Self {
+        Self { f }
+    }
+}
+
+impl<T> FuncEval for FuncSqrt<T>
+where
+    T: FuncEval,
+{
+    fn eval(&self, x: f64) -> f64 {
+        self.f.eval(x).sqrt()
+    }
+}
+
+/// Represents a cubic root of a function f
+/// Given x a real number Qbrt(x) = qbrt(f(x))
+pub struct FuncQbrt<T>
+where
+    T: FuncEval,
+{
+    f: T,
+}
+
+impl<T> FuncQbrt<T>
+where
+    T: FuncEval,
+{
+    pub fn new(f: T) -> Self {
+        Self { f }
+    }
+}
+
+impl<T> FuncEval for FuncQbrt<T>
+where
+    T: FuncEval,
+{
+    fn eval(&self, x: f64) -> f64 {
+        self.f.eval(x).cbrt()
+    }
+}
+
+/// Represents a nth root of a function f
+/// Given x a real number and n != 0 then Nroot(x) = (f(x))^(1/n)
+pub struct FuncNthrt<T>
+where
+    T: FuncEval,
+{
+    n: f64,
+    f: T,
+}
+
+impl<T> FuncNthrt<T>
+where
+    T: FuncEval,
+{
+    pub fn new(n: f64, f: T) -> Self {
+        assert!(n != 0f64);
+        Self { n, f }
+    }
+}
+
+impl<T> FuncEval for FuncNthrt<T>
+where
+    T: FuncEval,
+{
+    fn eval(&self, x: f64) -> f64 {
+        self.f.eval(x).powf(1f64 / self.n)
     }
 }
