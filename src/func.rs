@@ -1,17 +1,24 @@
-#![crate_name="doc"]
+#![crate_name = "doc"]
 
 pub enum FuncType {
+    Const,
     Idem,
     Sum,
     Prod,
     Pow,
     ExpA,
-    LogA,
     ExpE,
+    LogA,
     LogE,
     TrigSin,
     TrigCos,
     TrigTan,
+    TrigAsin,
+    TrigAcos,
+    TrigAtan,
+    Sqrt,
+    Qbrt,
+    Nroot,
 }
 
 /// Represents a function f that can be evaluated at x value
@@ -30,7 +37,25 @@ impl FuncEval for Func {
     }
 }
 
-/// Represents an f identity function, 
+/// Represents a constant function
+/// Given x a real number C(x) = c
+pub struct FuncConst {
+    c: f64,
+}
+
+impl FuncConst {
+    pub fn new(c: f64) -> Self {
+        Self { c }
+    }
+}
+
+impl FuncEval for FuncConst {
+    fn eval(&self, x: f64) -> f64 {
+        self.c
+    }
+}
+
+/// Represents an f identity function,
 /// given x a real number then f(x) = x
 pub struct FuncIdem {
     f_type: FuncType,
@@ -50,7 +75,9 @@ impl FuncEval for FuncIdem {
     }
 }
 
-struct FuncSum<T>
+/// Represents a sum function s of two function f and g
+/// Given x a real number s(x) = f(x) + g(x)
+pub struct FuncSum<T>
 where
     T: FuncEval,
 {
@@ -76,7 +103,9 @@ where
     }
 }
 
-struct FuncProd<T>
+/// Represents a product function p of two functions f and g
+/// Given x a real number then p(x) = f(x) * g(x)
+pub struct FuncProd<T>
 where
     T: FuncEval,
 {
@@ -102,7 +131,9 @@ where
     }
 }
 
-struct FuncPow<T>
+/// Represents a power function p of a function f and constant n
+/// Given x a real number p(x) = f(x) ^ n
+pub struct FuncPow<T>
 where
     T: FuncEval,
 {
@@ -124,11 +155,13 @@ where
     T: FuncEval,
 {
     fn eval(&self, x: f64) -> f64 {
-        self.f.eval(x)
+        self.f.eval(x).powf(self.n)
     }
 }
 
-struct FuncExpA<T>
+/// Represents a exponetial function exp of a constant a and a function f
+/// Given x a real number then exp(x) = a ^ f(x)
+pub struct FuncExpA<T>
 where
     T: FuncEval,
 {
@@ -150,6 +183,196 @@ where
     T: FuncEval,
 {
     fn eval(&self, x: f64) -> f64 {
-        f64::powf(self.a, x)
+        self.a.powf(self.f.eval(x))
+    }
+}
+
+/// Represents an exponential function of Euler constant e and a fuction f
+/// Given x a real number exp(x) = e ^ f(x)
+pub struct FuncExpE<T>
+where
+    T: FuncEval,
+{
+    f: T,
+}
+
+impl<T> FuncExpE<T>
+where
+    T: FuncEval,
+{
+    pub fn new(f: T) -> Self {
+        Self { f }
+    }
+}
+
+impl<T> FuncEval for FuncExpE<T>
+where
+    T: FuncEval,
+{
+    fn eval(&self, x: f64) -> f64 {
+        f64::consts::E.powf(x)
+    }
+}
+
+/// Represents log base b function of f function
+/// Given x a positive real number then lg_b(x) = log_b(f(x))
+pub struct FuncLogA<T>
+where
+    T: FuncEval,
+{
+    b: f64,
+    f: T,
+}
+
+impl<T> FuncLogA<T> {
+    pub fn new(b: f64, f: T) -> Self {
+        Self { b, f }
+    }
+}
+
+impl<T> FuncEval for FuncLogA<T> {
+    fn eval(&self, x: f64) -> f64 {
+        self.f.eval(x).log(self.b)
+    }
+}
+
+/// Represents neperian logarithm (natural log, log base e where e is Eulers constant) ln of function f
+/// Given x a positive real number ln(x) = log_e(f(x))
+pub struct FuncLogE<T> {
+    f: T,
+}
+
+impl<T> FuncLogE<T> {
+    pub fn new(f: T) -> Self {
+        Self { f }
+    }
+}
+
+impl<T> FuncEval for FuncLogE<T> {
+    fn eval(&self, x: f64) -> f64 {
+        self.f.eval(x).ln()
+    }
+}
+
+/// Represents a sine function of a function f
+/// Given x a real number (representing an angle in radians) Sin(x) = sin(f(x))
+pub struct FuncSin<T>
+where
+    T: FuncEval,
+{
+    f: T,
+}
+
+impl<T> FuncSin<T>
+where
+    T: FuncEval,
+{
+    pub fn new(f: T) -> Self {
+        Self { f }
+    }
+}
+
+impl<T> FuncEval for FuncSin<T>
+where
+    T: FuncEval,
+{
+    fn eval(&self, x: f64) -> f64 {
+        self.f.eval(x).sin()
+    }
+}
+
+/// Represents a cosine function of a f function
+/// Given x a real number (representing an angle in radians) Cos(x) = cos(f(x))
+pub struct FuncCos<T>
+where
+    T: FuncEval,
+{
+    f: T,
+}
+
+impl<T> FuncCos<T>
+where
+    T: FuncEval,
+{
+    pub fn new(f: T) -> Self {
+        Self { f }
+    }
+}
+
+impl<T> FuncEval for FuncCos<T>
+where
+    T: FuncEval,
+{
+    fn eval(&self, x: f64) -> f64 {
+        self.f.eval(x).cos()
+    }
+}
+
+/// Represents a tangent function of a function f
+/// Given x a real number (different from k*pi + pi/2 where k is an integer)
+pub struct FuncTan<T>
+where
+    T: FuncEval,
+{
+    f: T,
+}
+
+impl<T> FuncTan<T> {
+    pub fn new(f: T) -> Self {
+        Self { f }
+    }
+}
+
+impl<T> FuncEval for FuncTan<T>
+where
+    T: FuncEval,
+{
+    fn eval(&self, x: f64) -> f64 {
+        sefl.f.eval(x).tan()
+    }
+}
+
+/// Represents a arc sine function of a f function
+/// Given x a real number (-1 <= x <= 1) then Asin(x) = asin(f(x))
+pub struct FuncAsin<T>
+where
+    T: FuncEval,
+{
+    f: T,
+}
+
+impl<T> FuncAsin<T>
+where
+    T: FuncEval,
+{
+    pub fn new(f: T) -> Self {
+        Self { f }
+    }
+}
+
+impl<T> FuncEval for FuncAsin<T>
+where
+    T: FuncEval,
+{
+    fn eval(&self, x: f64) -> f64 {
+        self.f.eval(x).asin()
+    }
+}
+
+/// Represents a function arc cosine for a function f
+/// Given x a real number (-1 <= x <= 1) Acos(x) = acos(f(x))
+pub struct FuncAcos<T>
+where
+    T: FuncEval,
+{
+    f: T,
+}
+
+impl<T> FuncAcos<T>
+where
+    T: FuncEval,
+{
+    pub fn new(f: T) -> Self {
+        Self { f }
     }
 }

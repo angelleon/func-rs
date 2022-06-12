@@ -1,8 +1,7 @@
 pub mod func;
 
-#[crate_name="doc"]
-
-use func::*;
+#[crate_name = "doc"]
+pub use func::*;
 
 #[cfg(test)]
 mod tests {
